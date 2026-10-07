@@ -1,25 +1,32 @@
 import React, { useState } from 'react';
 import { 
-  HeartHandshake, 
   Copy, 
   Check, 
-  Sparkles, 
   Quote, 
   BookHeart, 
-  Volume2, 
-  Languages 
+  Globe 
 } from 'lucide-react';
+import { UI_STRINGS } from '../data/translations';
 
-export default function ParablesSection({ studyPackage }) {
+export default function ParablesSection({ mainLanguage, studyPackage }) {
+  const t = UI_STRINGS[mainLanguage === 'en' ? 'en' : 'vi'];
+  const isEnglish = mainLanguage === 'en';
+  const isBilingual = mainLanguage === 'bilingual';
+
   const [copiedIndex, setCopiedIndex] = useState(null);
-  const [langView, setLangView] = useState('bilingual'); // 'vi' | 'en' | 'bilingual'
+  const [langView, setLangView] = useState(mainLanguage === 'en' ? 'en' : mainLanguage === 'vi' ? 'vi' : 'bilingual');
 
   if (!studyPackage?.parables || studyPackage.parables.length === 0) return null;
 
   const parables = studyPackage.parables;
 
   const handleCopyStory = (parable, idx) => {
-    const text = `[MINH HỌA]: ${parable.titleVi} (${parable.titleEn})\n\n${parable.storyVi}\n\n[LỜI KẾT NỐI MỤC VỤ]:\n${parable.pastoralBridgeVi || ''}`;
+    let text = '';
+    if (langView === 'en' || (langView === 'bilingual' && isEnglish)) {
+      text = `[ILLUSTRATION]: ${parable.titleEn || parable.titleVi}\n\n${parable.storyEn || parable.storyVi}\n\n[PASTORAL BRIDGE]:\n${parable.pastoralBridgeEn || parable.pastoralBridgeVi || ''}`;
+    } else {
+      text = `[MINH HỌA]: ${parable.titleVi} (${parable.titleEn})\n\n${parable.storyVi}\n\n[LỜI KẾT NỐI MỤC VỤ]:\n${parable.pastoralBridgeVi || ''}`;
+    }
     navigator.clipboard.writeText(text);
     setCopiedIndex(idx);
     setTimeout(() => setCopiedIndex(null), 2000);
@@ -36,42 +43,42 @@ export default function ParablesSection({ studyPackage }) {
           </div>
           <div>
             <h2 className="text-base font-serif font-bold text-slate-900 flex items-center gap-2">
-              Truyện Ngụ Ngôn & Minh Họa Đời Sống (Contemporary Parables)
+              {t.parablesTitle}
               <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-sans font-medium">
-                Văn Phong Thuần Việt Tự Nhiên
+                {isEnglish ? "Heart-Touching Illustrations" : "Văn Phong Thuần Việt Tự Nhiên"}
               </span>
             </h2>
             <p className="text-xs text-slate-700">
-              Những câu chuyện chạm đến trái tim người nghe, không dịch máy, gắn kết trực tiếp với câu Kinh Thánh
+              {t.parablesSubtitle}
             </p>
           </div>
         </div>
 
-        {/* Language View Switcher */}
+        {/* Story View Selector */}
         <div className="flex items-center bg-white p-0.5 rounded-lg border border-slate-200 text-xs">
           <button
-            onClick={() => setLangView('vi')}
-            className={`px-2.5 py-1 rounded-md font-medium transition-all ${
-              langView === 'vi' ? 'bg-amber-700 text-white shadow-xs' : 'text-slate-700 hover:text-slate-900'
+            onClick={() => setLangView('en')}
+            className={`px-2.5 py-1 rounded-md font-medium transition-all cursor-pointer ${
+              langView === 'en' ? 'bg-amber-700 text-white shadow-xs' : 'text-slate-700 hover:text-slate-900'
             }`}
           >
-            Tiếng Việt
+            English
           </button>
           <button
             onClick={() => setLangView('bilingual')}
-            className={`px-2.5 py-1 rounded-md font-medium transition-all ${
+            className={`px-2.5 py-1 rounded-md font-medium transition-all cursor-pointer ${
               langView === 'bilingual' ? 'bg-amber-700 text-white shadow-xs' : 'text-slate-700 hover:text-slate-900'
             }`}
           >
             Song Ngữ
           </button>
           <button
-            onClick={() => setLangView('en')}
-            className={`px-2.5 py-1 rounded-md font-medium transition-all ${
-              langView === 'en' ? 'bg-amber-700 text-white shadow-xs' : 'text-slate-700 hover:text-slate-900'
+            onClick={() => setLangView('vi')}
+            className={`px-2.5 py-1 rounded-md font-medium transition-all cursor-pointer ${
+              langView === 'vi' ? 'bg-amber-700 text-white shadow-xs' : 'text-slate-700 hover:text-slate-900'
             }`}
           >
-            English
+            Tiếng Việt
           </button>
         </div>
       </div>
@@ -93,30 +100,28 @@ export default function ParablesSection({ studyPackage }) {
                   </span>
                   <div>
                     <h3 className="font-serif font-bold text-base sm:text-lg text-slate-900">
-                      {parable.titleVi}
+                      {isEnglish ? (parable.titleEn || parable.titleVi) : parable.titleVi}
                     </h3>
-                    {parable.titleEn && (
-                      <p className="text-xs text-slate-700 italic">
-                        {parable.titleEn}
-                      </p>
-                    )}
+                    <p className="text-xs text-slate-700 italic">
+                      {isEnglish ? parable.titleVi : parable.titleEn}
+                    </p>
                   </div>
                 </div>
 
                 <button
                   onClick={() => handleCopyStory(parable, idx)}
                   className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1 shrink-0 transition-all active:scale-95 cursor-pointer"
-                  title="Sao chép câu chuyện này"
+                  title="Copy illustration story"
                 >
                   {isCopied ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span className="hidden sm:inline text-emerald-600">Đã chép</span>
+                      <span className="hidden sm:inline text-emerald-600">{t.copied}</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Chép Câu Chuyện</span>
+                      <span className="hidden sm:inline">{t.copyStory}</span>
                     </>
                   )}
                 </button>
@@ -125,12 +130,26 @@ export default function ParablesSection({ studyPackage }) {
               {/* Story Content */}
               <div className="p-5 sm:p-6 space-y-4">
                 
-                {/* Vietnamese Story */}
-                {(langView === 'vi' || langView === 'bilingual') && (
+                {/* English Story (if English or Bilingual selected) */}
+                {(langView === 'en' || langView === 'bilingual') && parable.storyEn && (
                   <div>
                     {langView === 'bilingual' && (
+                      <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md mb-2">
+                        English Story Adaptation
+                      </span>
+                    )}
+                    <div className="text-sm sm:text-base text-slate-800 leading-relaxed font-serif whitespace-pre-line space-y-3 pl-3 border-l-2 border-indigo-400">
+                      {parable.storyEn}
+                    </div>
+                  </div>
+                )}
+
+                {/* Vietnamese Story (if Vietnamese or Bilingual selected) */}
+                {(langView === 'vi' || langView === 'bilingual') && (
+                  <div className={langView === 'bilingual' ? 'pt-4 border-t border-slate-100' : ''}>
+                    {langView === 'bilingual' && (
                       <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-md mb-2">
-                        Bản Tiếng Việt (Văn Phong Gần Gũi Đời Thường)
+                        Bản Tiếng Việt Cho Mục Sư / Phụ Thân Giảng (Natural Vietnamese)
                       </span>
                     )}
                     <div className="text-sm sm:text-base text-slate-800 leading-relaxed font-serif whitespace-pre-line space-y-3 pl-3 border-l-2 border-emerald-400">
@@ -139,35 +158,36 @@ export default function ParablesSection({ studyPackage }) {
                   </div>
                 )}
 
-                {/* English Story */}
-                {(langView === 'en' || langView === 'bilingual') && parable.storyEn && (
-                  <div className={langView === 'bilingual' ? 'pt-4 border-t border-slate-100' : ''}>
-                    {langView === 'bilingual' && (
-                      <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md mb-2">
-                        English Story Adaptation
-                      </span>
-                    )}
-                    <div className="text-xs sm:text-sm text-slate-700 leading-relaxed font-serif whitespace-pre-line space-y-2 italic pl-3 border-l-2 border-slate-300">
-                      {parable.storyEn}
-                    </div>
-                  </div>
-                )}
-
-                {/* Pastoral Bridge (Lời chuyển ý của mục sư trên bục giảng) */}
-                {parable.pastoralBridgeVi && (
+                {/* Pastoral Bridge */}
+                {(parable.pastoralBridgeEn || parable.pastoralBridgeVi) && (
                   <div className="bg-amber-50/70 rounded-xl p-3.5 sm:p-4 border border-amber-200/80 flex items-start gap-3 mt-4">
                     <Quote className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
                     <div>
                       <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900 block mb-0.5">
-                        Lời Nối Mục Vụ Trên Bục Giảng (Pastoral Pulpit Bridge)
+                        {t.pastoralBridgeLabel}
                       </span>
-                      <p className="text-xs sm:text-sm font-medium text-slate-900 leading-relaxed">
-                        {parable.pastoralBridgeVi}
-                      </p>
-                      {parable.pastoralBridgeEn && (
-                        <p className="text-xs text-slate-700 italic mt-1">
-                          {parable.pastoralBridgeEn}
-                        </p>
+                      {isEnglish && parable.pastoralBridgeEn ? (
+                        <>
+                          <p className="text-xs sm:text-sm font-medium text-slate-900 leading-relaxed">
+                            {parable.pastoralBridgeEn}
+                          </p>
+                          {parable.pastoralBridgeVi && (
+                            <p className="text-xs text-slate-700 italic mt-1">
+                              Tiếng Việt: "{parable.pastoralBridgeVi}"
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-xs sm:text-sm font-medium text-slate-900 leading-relaxed">
+                            {parable.pastoralBridgeVi}
+                          </p>
+                          {parable.pastoralBridgeEn && (
+                            <p className="text-xs text-slate-700 italic mt-1">
+                              English: "{parable.pastoralBridgeEn}"
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

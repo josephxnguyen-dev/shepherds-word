@@ -3,34 +3,46 @@ import {
   Compass, 
   Copy, 
   Check, 
-  Lightbulb, 
-  Layers, 
-  Sparkles, 
-  ChevronDown, 
-  ChevronUp 
+  Lightbulb 
 } from 'lucide-react';
+import { UI_STRINGS } from '../data/translations';
 
-export default function KeyPointsSection({ studyPackage, audienceMode }) {
+export default function KeyPointsSection({ mainLanguage, studyPackage }) {
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [allCopied, setAllCopied] = useState(false);
-  const [expandedIndex, setExpandedIndex] = useState(null); // all expanded by default if null
 
   if (!studyPackage) return null;
 
+  const t = UI_STRINGS[mainLanguage === 'en' ? 'en' : 'vi'];
+  const isEnglish = mainLanguage === 'en';
+  const isBilingual = mainLanguage === 'bilingual';
   const keyPoints = studyPackage.keyPoints || [];
 
   const handleCopySinglePoint = (point, idx) => {
-    const text = `${point.pointVi} (${point.pointEn})\n\n[Giải Nghĩa / Exegesis]:\n${point.exegesisVi}\n\n[Áp Dụng / Application]:\n${point.applicationVi}`;
+    let text = '';
+    if (isEnglish) {
+      text = `${point.pointEn} (${point.pointVi})\n\n[Exegesis]:\n${point.exegesisEn}\n\n[Application]:\n${point.applicationEn}`;
+    } else {
+      text = `${point.pointVi} (${point.pointEn})\n\n[Giải Nghĩa]:\n${point.exegesisVi}\n\n[Áp Dụng]:\n${point.applicationVi}`;
+    }
     navigator.clipboard.writeText(text);
     setCopiedIndex(idx);
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   const handleCopyAllPoints = () => {
-    const text = `CHỦ ĐỀ: ${studyPackage.titleVi} (${studyPackage.titleEn})\n\nTRỌNG TÂM: ${studyPackage.themeVi}\n\n` +
-      keyPoints.map((p, i) => 
-        `ĐIỂM ${i + 1}: ${p.pointVi} / ${p.pointEn}\n- Giải nghĩa: ${p.exegesisVi}\n- Áp dụng: ${p.applicationVi}\n`
-      ).join('\n');
+    let text = '';
+    if (isEnglish) {
+      text = `TITLE: ${studyPackage.titleEn} (${studyPackage.titleVi})\n\nTHEME: ${studyPackage.themeEn}\n\n` +
+        keyPoints.map((p, i) => 
+          `POINT ${i + 1}: ${p.pointEn}\n- Exegesis: ${p.exegesisEn}\n- Application: ${p.applicationEn}\n(Vietnamese: ${p.pointVi})\n`
+        ).join('\n');
+    } else {
+      text = `CHỦ ĐỀ: ${studyPackage.titleVi} (${studyPackage.titleEn})\n\nTRỌNG TÂM: ${studyPackage.themeVi}\n\n` +
+        keyPoints.map((p, i) => 
+          `ĐIỂM ${i + 1}: ${p.pointVi} / ${p.pointEn}\n- Giải nghĩa: ${p.exegesisVi}\n- Áp dụng: ${p.applicationVi}\n`
+        ).join('\n');
+    }
     
     navigator.clipboard.writeText(text);
     setAllCopied(true);
@@ -48,10 +60,10 @@ export default function KeyPointsSection({ studyPackage, audienceMode }) {
           </div>
           <div>
             <h2 className="text-base font-serif font-bold text-slate-900">
-              Điểm Then Chốt & Dàn Bài Giải Kinh (Key Points & Exegesis)
+              {t.keyPointsTitle}
             </h2>
             <p className="text-xs text-slate-700">
-              Phân tích ngữ nghĩa nguyên bản, giải thích thần học và áp dụng mục vụ
+              {t.keyPointsSubtitle}
             </p>
           </div>
         </div>
@@ -63,12 +75,12 @@ export default function KeyPointsSection({ studyPackage, audienceMode }) {
           {allCopied ? (
             <>
               <Check className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="text-emerald-600">Đã chép toàn bộ</span>
+              <span className="text-emerald-600">{t.copied}</span>
             </>
           ) : (
             <>
               <Copy className="w-3.5 h-3.5" />
-              <span>Chép Toàn Bộ Dàn Bài</span>
+              <span>{t.copyAllPoints}</span>
             </>
           )}
         </button>
@@ -79,28 +91,32 @@ export default function KeyPointsSection({ studyPackage, audienceMode }) {
         {/* Sermon Title & Overarching Theme Banner */}
         <div className="bg-gradient-to-r from-amber-50/80 via-orange-50/50 to-amber-50/80 rounded-xl p-4 sm:p-5 border border-amber-200/60 mb-6">
           <div className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-1">
-            Đề Mục Gợi Ý (Sermon Title)
+            {t.sermonTitleLabel}
           </div>
           <h3 className="font-serif text-xl sm:text-2xl font-bold text-slate-950 mb-1">
-            {studyPackage.titleVi}
+            {isEnglish ? studyPackage.titleEn : studyPackage.titleVi}
           </h3>
           <div className="text-xs sm:text-sm font-medium text-amber-900/90 mb-3 italic">
-            "{studyPackage.titleEn}"
+            "{isEnglish ? studyPackage.titleVi : studyPackage.titleEn}"
           </div>
 
           <div className="pt-3 border-t border-amber-200/60 flex items-start gap-2 text-xs sm:text-sm text-slate-800">
             <Lightbulb className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
             <div>
-              <strong className="text-amber-950">Trọng tâm sứ điệp: </strong>
-              <span className="leading-relaxed">{studyPackage.themeVi}</span>
-              {studyPackage.themeEn && (
-                <p className="text-xs text-slate-700 mt-0.5 italic">{studyPackage.themeEn}</p>
+              <strong className="text-amber-950">{t.coreThemeLabel} </strong>
+              <span className="leading-relaxed">
+                {isEnglish ? (studyPackage.themeEn || studyPackage.themeVi) : studyPackage.themeVi}
+              </span>
+              {(isEnglish || isBilingual) && studyPackage.themeVi && (
+                <p className="text-xs text-slate-700 mt-0.5 italic">
+                  {isEnglish ? `(Tiếng Việt: ${studyPackage.themeVi})` : studyPackage.themeEn}
+                </p>
               )}
             </div>
           </div>
         </div>
 
-        {/* 3 Key Points Accordion/Cards */}
+        {/* 3 Key Points Cards */}
         <div className="space-y-4">
           {keyPoints.map((point, index) => {
             const isCopied = copiedIndex === index;
@@ -118,10 +134,10 @@ export default function KeyPointsSection({ studyPackage, audienceMode }) {
                     </span>
                     <div>
                       <h4 className="font-serif font-bold text-base sm:text-lg text-slate-900 leading-snug">
-                        {point.pointVi}
+                        {isEnglish ? point.pointEn : point.pointVi}
                       </h4>
                       <p className="text-xs font-medium text-slate-700 italic mt-0.5">
-                        {point.pointEn}
+                        {isEnglish ? point.pointVi : point.pointEn}
                       </p>
                     </div>
                   </div>
@@ -129,7 +145,7 @@ export default function KeyPointsSection({ studyPackage, audienceMode }) {
                   <button
                     onClick={() => handleCopySinglePoint(point, index)}
                     className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition-all text-xs flex items-center gap-1 shrink-0 cursor-pointer"
-                    title="Sao chép điểm này"
+                    title="Copy this point"
                   >
                     {isCopied ? (
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
@@ -145,14 +161,15 @@ export default function KeyPointsSection({ studyPackage, audienceMode }) {
                   {/* Exegesis (Giải nghĩa) */}
                   <div>
                     <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-md mb-2">
-                      Giải Nghĩa Thần Học & Bản Văn (Exegesis)
+                      {t.exegesisLabel}
                     </span>
                     <p className="text-sm text-slate-800 leading-relaxed pl-3 border-l-2 border-amber-300">
-                      {point.exegesisVi}
+                      {isEnglish ? (point.exegesisEn || point.exegesisVi) : point.exegesisVi}
                     </p>
-                    {point.exegesisEn && (
+                    {/* Secondary language note */}
+                    {(isEnglish || isBilingual) && (
                       <p className="text-xs text-slate-700 leading-relaxed pl-3 border-l-2 border-slate-200 mt-2 italic">
-                        {point.exegesisEn}
+                        {isEnglish ? `Tiếng Việt: ${point.exegesisVi}` : point.exegesisEn}
                       </p>
                     )}
                   </div>
@@ -160,14 +177,14 @@ export default function KeyPointsSection({ studyPackage, audienceMode }) {
                   {/* Real-world Pastoral Application (Áp dụng) */}
                   <div className="bg-slate-50/80 rounded-xl p-3.5 border border-slate-100">
                     <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-md mb-1.5">
-                      Áp Dụng Thực Tiễn Vào Đời Sống (Life Application)
+                      {t.applicationLabel}
                     </span>
                     <p className="text-xs sm:text-sm text-slate-900 font-medium leading-relaxed">
-                      👉 {point.applicationVi}
+                      👉 {isEnglish ? (point.applicationEn || point.applicationVi) : point.applicationVi}
                     </p>
-                    {point.applicationEn && (
+                    {(isEnglish || isBilingual) && (
                       <p className="text-xs text-slate-700 leading-relaxed mt-1 italic pl-4">
-                        {point.applicationEn}
+                        {isEnglish ? `Tiếng Việt: ${point.applicationVi}` : point.applicationEn}
                       </p>
                     )}
                   </div>

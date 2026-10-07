@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Search, Sparkles, BookOpen, ChevronRight, Layers, SlidersHorizontal, Loader2 } from 'lucide-react';
-import { BIBLE_BOOKS, TOPICAL_CATEGORIES } from '../data/bibleBooks';
+import { Search, Sparkles, BookOpen, SlidersHorizontal, Loader2 } from 'lucide-react';
+import { BIBLE_BOOKS } from '../data/bibleBooks';
 import { CURATED_PASSAGES } from '../data/curatedPassages';
+import { UI_STRINGS } from '../data/translations';
 
 export default function VerseSelector({
+  mainLanguage,
   selectedPassageId,
   onSelectPassage,
   onGenerateCustomVerse,
@@ -11,6 +13,9 @@ export default function VerseSelector({
   hasApiKey,
   onOpenApiKeyModal
 }) {
+  const t = UI_STRINGS[mainLanguage === 'en' ? 'en' : 'vi'];
+  const isEnglish = mainLanguage === 'en';
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [testamentFilter, setTestamentFilter] = useState('ALL'); // 'ALL' | 'OT' | 'NT'
@@ -26,7 +31,8 @@ export default function VerseSelector({
     const matchesSearch = !searchQuery.trim() || 
       p.referenceVi.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.referenceEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.modes.sermon?.titleVi.toLowerCase().includes(searchQuery.toLowerCase());
+      p.modes.sermon?.titleVi.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.modes.sermon?.titleEn.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -45,7 +51,11 @@ export default function VerseSelector({
 
   const handleCustomGenerateSubmit = (e) => {
     e.preventDefault();
-    const query = searchQuery.trim() || `${selectedBookObj.nameVi} ${chapter}:${verseRange}`;
+    const defaultRef = isEnglish 
+      ? `${selectedBookObj.nameEn} ${chapter}:${verseRange}`
+      : `${selectedBookObj.nameVi} ${chapter}:${verseRange}`;
+    
+    const query = searchQuery.trim() || defaultRef;
     if (!query) return;
 
     // Check if it matches an existing curated passage
@@ -79,7 +89,7 @@ export default function VerseSelector({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Nhập câu Kinh Thánh (ví dụ: Giăng 3:16, Thi Thiên 23, Phi-líp 4:6-7, Rô-ma 8:28)..."
+            placeholder={t.searchPlaceholder}
             className="w-full pl-10 pr-28 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white text-slate-900 transition-all"
           />
           <button
@@ -90,12 +100,12 @@ export default function VerseSelector({
             {isGenerating ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Đang soạn...</span>
+                <span>{t.studyingBtn}</span>
               </>
             ) : (
               <>
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Nghiên Cứu</span>
+                <span>{t.studyBtn}</span>
               </>
             )}
           </button>
@@ -104,14 +114,14 @@ export default function VerseSelector({
         {/* Toggle Advanced Book Picker */}
         <button
           onClick={() => setShowAdvancedPicker(!showAdvancedPicker)}
-          className={`px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+          className={`px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
             showAdvancedPicker 
               ? 'bg-slate-800 text-white border-slate-800' 
               : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
           }`}
         >
           <SlidersHorizontal className="w-3.5 h-3.5" />
-          <span>{showAdvancedPicker ? 'Đóng Bộ Chọn 66 Sách' : 'Chọn Từ 66 Sách Kinh Thánh'}</span>
+          <span>{showAdvancedPicker ? t.close66Books : t.toggle66Books}</span>
         </button>
 
       </div>
@@ -121,7 +131,7 @@ export default function VerseSelector({
         <div className="bg-slate-50/80 rounded-xl p-4 border border-slate-200 mb-5 animate-in fade-in duration-200">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-3 pb-2 border-b border-slate-200">
             <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Chọn Sách, Chương & Câu Cụ Thể
+              {isEnglish ? "Select Book, Chapter & Verse" : "Chọn Sách, Chương & Câu Cụ Thể"}
             </span>
             <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 text-xs">
               <button
@@ -131,7 +141,7 @@ export default function VerseSelector({
                   testamentFilter === 'ALL' ? 'bg-amber-600 text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Tất Cả (66)
+                {t.allBooks}
               </button>
               <button
                 type="button"
@@ -140,7 +150,7 @@ export default function VerseSelector({
                   testamentFilter === 'OT' ? 'bg-amber-600 text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Cựu Ước (39)
+                {t.oldTestament}
               </button>
               <button
                 type="button"
@@ -149,7 +159,7 @@ export default function VerseSelector({
                   testamentFilter === 'NT' ? 'bg-amber-600 text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Tân Ước (27)
+                {t.newTestament}
               </button>
             </div>
           </div>
@@ -158,7 +168,7 @@ export default function VerseSelector({
             {/* Book Selector */}
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                Tên Sách (Kinh Thánh)
+                {t.bookLabel}
               </label>
               <select
                 value={selectedBookId}
@@ -167,7 +177,7 @@ export default function VerseSelector({
               >
                 {filteredBooks.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.nameVi} ({b.nameEn}) - {b.chapters} chương
+                    {isEnglish ? `${b.nameEn} (${b.nameVi})` : `${b.nameVi} (${b.nameEn})`} - {b.chapters} {isEnglish ? "ch." : "chương"}
                   </option>
                 ))}
               </select>
@@ -176,7 +186,7 @@ export default function VerseSelector({
             {/* Chapter Input */}
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                Chương (1 - {selectedBookObj.chapters})
+                {t.chapterLabel} (1 - {selectedBookObj.chapters})
               </label>
               <input
                 type="number"
@@ -191,7 +201,7 @@ export default function VerseSelector({
             {/* Verse Range Input */}
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                Câu / Phân đoạn (vd: 16 hoặc 6-7)
+                {t.verseLabel}
               </label>
               <input
                 type="text"
@@ -206,20 +216,22 @@ export default function VerseSelector({
           {/* Custom Focus Prompt Note */}
           <div className="mt-3">
             <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-              Ghi Chú Trọng Tâm Của Mục Sư (Tùy Chọn):
+              {t.pastorNoteLabel}
             </label>
             <input
               type="text"
               value={customPromptNote}
               onChange={(e) => setCustomPromptNote(e.target.value)}
-              placeholder="Ví dụ: Nhấn mạnh vào đức tin của người cha, hoặc bối cảnh các môn đồ sợ hãi giữa biển..."
+              placeholder={t.pastorNotePlaceholder}
               className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
             />
           </div>
 
           <div className="mt-3 flex items-center justify-between">
             <span className="text-xs text-slate-600 font-medium">
-              Đoạn chọn: <strong className="text-amber-800">{selectedBookObj.nameVi} {chapter}:{verseRange}</strong> ({selectedBookObj.nameEn} {chapter}:{verseRange})
+              {t.selectedPassagePrefix} <strong className="text-amber-800">
+                {isEnglish ? `${selectedBookObj.nameEn} ${chapter}:${verseRange}` : `${selectedBookObj.nameVi} ${chapter}:${verseRange}`}
+              </strong> ({isEnglish ? `${selectedBookObj.nameVi} ${chapter}:${verseRange}` : `${selectedBookObj.nameEn} ${chapter}:${verseRange}`})
             </span>
             <button
               type="button"
@@ -230,12 +242,12 @@ export default function VerseSelector({
               {isGenerating ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Đang Tạo Dàn Ý...</span>
+                  <span>{t.studyingBtn}</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Mở Dàn Bài & Soạn Giảng</span>
+                  <span>{t.openOutlineBtn}</span>
                 </>
               )}
             </button>
@@ -248,14 +260,14 @@ export default function VerseSelector({
         <div className="flex items-center justify-between mb-2.5">
           <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
             <BookOpen className="w-3.5 h-3.5 text-amber-700" />
-            Thư Viện Soạn Sẵn (Tức Thì - Song Ngữ Đầy Đủ)
+            {t.curatedTitle}
           </span>
           <span className="text-[11px] text-slate-700">
-            {CURATED_PASSAGES.length} bài giảng mẫu cao cấp
+            {CURATED_PASSAGES.length} {t.curatedSubtitle}
           </span>
         </div>
 
-        {/* Quick Verses Carousel / Grid */}
+        {/* Quick Verses Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           {CURATED_PASSAGES.map((passage) => {
             const isSelected = selectedPassageId === passage.id;
@@ -271,17 +283,17 @@ export default function VerseSelector({
               >
                 <div>
                   <div className="text-xs font-serif font-bold text-slate-900 flex items-center justify-between">
-                    <span>{passage.referenceVi}</span>
+                    <span>{isEnglish ? passage.referenceEn : passage.referenceVi}</span>
                     {isSelected && (
                       <span className="w-2 h-2 rounded-full bg-amber-700"></span>
                     )}
                   </div>
                   <div className="text-[11px] text-slate-700 font-medium truncate">
-                    {passage.referenceEn}
+                    {isEnglish ? passage.referenceVi : passage.referenceEn}
                   </div>
                 </div>
                 <div className="mt-2 text-[11px] text-amber-900 font-semibold truncate">
-                  {passage.categoryLabelVi}
+                  {isEnglish ? passage.categoryLabelEn : passage.categoryLabelVi}
                 </div>
               </button>
             );

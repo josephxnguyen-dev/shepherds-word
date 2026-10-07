@@ -5,6 +5,7 @@ export async function generateSermonStudy({
   apiKey,
   verseReference,
   audienceMode = 'sermon', // 'sermon' | 'youth' | 'smallGroup'
+  lessonLength = 'medium', // 'short' | 'medium' | 'long'
   customFocus = '',
   selectedModel = 'gemini-2.5-flash'
 }) {
@@ -27,20 +28,37 @@ export async function generateSermonStudy({
     }
   };
 
+  const lengthDescriptions = {
+    short: {
+      en: 'Short Duration (~15 minutes): Fast-paced, concise, laser-focused on 1 punchy big idea with 1 memorable illustration and 1 immediate action takeaway. Pacing: 2m hook, 8m scripture/truth, 3m parable, 2m prayer.',
+      vi: 'Thời lượng ngắn (~15 phút): Tĩnh nguyện / Chapel ngắn. Cô đọng, tập trung vào 1 tư tưởng cốt lõi, 1 minh họa súc tích và 1 cam kết hành động.'
+    },
+    medium: {
+      en: 'Standard Duration (30–45 minutes): Comprehensive 3-point sermon or standard cell group study. Full exegesis, 2 relatable illustrations, robust pedagogical framework.',
+      vi: 'Thời lượng tiêu chuẩn (30–45 phút): Bài giảng Chúa Nhật tiêu chuẩn hoặc học Kinh Thánh nhóm nhỏ. 3 điểm then chốt, 2 câu chuyện ngụ ngôn đời sống.'
+    },
+    long: {
+      en: 'Deep Dive Duration (60+ minutes): In-depth theological masterclass / retreat workshop. Verse-by-verse historical-grammatical exegesis, Greek/Hebrew root words, cross-references, deep pastoral parables, and extended breakout questions.',
+      vi: 'Thời lượng chuyên sâu (Trên 1 giờ): Học viện Kinh Thánh / Hội thảo bồi linh. Phân tích ngữ cảnh lịch sử sâu, giải kinh từ gốc Hy Lạp/Hê-bơ-rơ, so sánh đối chiếu kinh văn, câu hỏi đào sâu bàn tròn.'
+    }
+  };
+
   const modeInfo = audienceModeDescriptions[audienceMode] || audienceModeDescriptions.sermon;
+  const lengthInfo = lengthDescriptions[lessonLength] || lengthDescriptions.medium;
 
   const systemPrompt = `
 You are an expert biblical theologian, homiletics professor, and seasoned Vietnamese pastor with deep cultural mastery.
 You are generating a complete sermon preparation package and study guide for Christian pastors and ministers for the passage: "${verseReference}".
 
 Target Audience Setting: ${modeInfo.en} / ${modeInfo.vi}
+Target Lesson Duration: ${lengthInfo.en} / ${lengthInfo.vi}
 ${customFocus ? `Custom Pastor's Focus/Theme: ${customFocus}` : ''}
 
 CRITICAL LINGUISTIC REQUIREMENT FOR VIETNAMESE:
 - The Vietnamese content MUST sound like it was conceived natively in conversational, natural, warm pastoral Vietnamese by a caring Vietnamese pastor who lives among the people.
 - It MUST NOT sound like it was translated or transliterated from English ("tuyệt đối tránh văn phong dịch thuật gượng gạo, từ ngữ tây hóa, hoặc câu cú vô cảm của máy dịch").
 - Use rich, natural evangelical expressions common in Vietnamese churches (e.g., "thân ái trong Đấng Christ", "bồi linh", "dâng phó", "trăn trở", "thao thức", "chạm vào lòng", "bình an thật", "neo chặt linh hồn", "đồng cỏ xanh tươi", "ơn phước dư dật").
-- For parables/illustrations, use vivid, culturally resonant metaphors from daily life (gia đình Việt Nam, đời sống mưu sinh, văn hóa bàn ăn, làng quê hoặc đời sống đô thị hiện đại, thế hệ trẻ, công nghệ) that touch hearts deeply.
+- For parables/illustrations, use vivid, culturally resonant metaphors from daily life that touch hearts deeply.
 
 You must return a valid JSON object strictly adhering to this schema:
 {
@@ -99,33 +117,33 @@ You must return a valid JSON object strictly adhering to this schema:
     ],
     "teachingPlan": {
       "hook": {
-        "stepVi": "Hook / Mở Đề Thu Hút (Cách bắt đầu gây tò mò, đạo cụ hoặc câu hỏi giật mình)",
+        "stepVi": "Hook / Mở Đề Thu Hút",
         "stepEn": "Hook / Attention grabber",
-        "descriptionVi": "Mô tả chi tiết cách mục sư/người dạy mở đầu buổi giảng",
-        "descriptionEn": "Detailed description of the opening attention grabber"
+        "descriptionVi": "Mô tả chi tiết cách mở đầu buổi giảng",
+        "descriptionEn": "Detailed description of opening hook"
       },
       "book": {
-        "stepVi": "Book / Khám Phá Bản Văn (Phương pháp dẫn dắt hội chúng đi vào Lời Chúa)",
+        "stepVi": "Book / Khám Phá Bản Văn",
         "stepEn": "Book / Scripture Discovery",
         "descriptionVi": "Mô tả cách trình bày bản văn Kinh Thánh rõ ràng, sáng tỏ",
         "descriptionEn": "Detailed walk-through of the scripture text"
       },
       "look": {
-        "stepVi": "Look / Soi Chiếu Tấm Lòng (Khám phá nội tâm, đối diện nan đề)",
+        "stepVi": "Look / Soi Chiếu Tấm Lòng",
         "stepEn": "Look / Heart Diagnostic",
         "descriptionVi": "Mô tả cách giúp tín hữu tự soi gương tấm lòng mình",
         "descriptionEn": "Detailed heart examination and introspection"
       },
       "took": {
-        "stepVi": "Took / Hành Động Tuần Này (Cam kết và bài tập thực hành cụ thể)",
+        "stepVi": "Took / Hành Động Tuần Này",
         "stepEn": "Took / Weekly Life Assignment",
         "descriptionVi": "Hành động cụ thể, có thể đo lường trong tuần tới",
         "descriptionEn": "Specific, actionable takeaways for the upcoming week"
       },
       "timeline": [
         { "time": "00 - 05m", "actionVi": "Mở đề & câu chuyện dẫn nhập", "actionEn": "Introduction & hook" },
-        { "time": "05 - 20m", "actionVi": "Giải nghĩa 3 điểm then chốt", "actionEn": "Exegesis of 3 key points" },
-        { "time": "20 - 30m", "actionVi": "Minh họa ngụ ngôn & ứng dụng đời sống", "actionEn": "Parable illustration & application" },
+        { "time": "05 - 20m", "actionVi": "Giải nghĩa các điểm then chốt", "actionEn": "Exegesis of key points" },
+        { "time": "20 - 30m", "actionVi": "Minh họa ngụ ngôn & ứng dụng", "actionEn": "Parable illustration & application" },
         { "time": "30 - 35m", "actionVi": "Kêu gọi & cầu nguyện dâng hiến", "actionEn": "Altar response & closing prayer" }
       ],
       "discussionQuestions": [
@@ -147,13 +165,13 @@ You must return a valid JSON object strictly adhering to this schema:
       {
         "titleVi": "Minh Họa 1: Tiêu đề truyện ngụ ngôn / minh họa đời sống",
         "titleEn": "Illustration 1: Title in English",
-        "storyVi": "Nội dung câu chuyện được viết bằng tiếng Việt truyền cảm, giàu hình ảnh, xúc động và tự nhiên (khoảng 3-4 đoạn văn hấp dẫn)",
+        "storyVi": "Nội dung câu chuyện được viết bằng tiếng Việt truyền cảm, giàu hình ảnh, xúc động và tự nhiên (3-4 đoạn)",
         "storyEn": "Full illustration written warmly in engaging English (3-4 paragraphs)",
-        "pastoralBridgeVi": "Lời đúc kết chuyển ý mục sư nói trên bục giảng để nối câu chuyện vào câu Kinh Thánh",
-        "pastoralBridgeEn": "Pastoral bridge connecting the illustration directly to the verse"
+        "pastoralBridgeVi": "Lời đúc kết chuyển ý mục sư nói trên bục giảng",
+        "pastoralBridgeEn": "Pastoral bridge connecting illustration to verse"
       },
       {
-        "titleVi": "Minh Họa 2: Tiêu đề minh họa thứ hai (gần gũi với đời sống hiện đại)",
+        "titleVi": "Minh Họa 2: Tiêu đề minh họa thứ hai",
         "titleEn": "Illustration 2: Title in English",
         "storyVi": "Nội dung câu chuyện minh họa thứ hai bằng tiếng Việt tự nhiên",
         "storyEn": "Second illustration in English",
@@ -164,10 +182,9 @@ You must return a valid JSON object strictly adhering to this schema:
   }
 }
 
-Respond ONLY with the raw JSON. Do not wrap in markdown quotes if possible, or use standard markdown \`\`\`json format. Ensure valid JSON syntax without trailing commas.
+Respond ONLY with valid JSON.
 `;
 
-  // We can try gemini-2.5-flash first, falling back to gemini-1.5-flash if needed
   const models = [selectedModel, 'gemini-2.5-flash', 'gemini-1.5-flash'];
   let lastError = null;
 
@@ -198,7 +215,7 @@ Respond ONLY with the raw JSON. Do not wrap in markdown quotes if possible, or u
         const errorData = await response.json().catch(() => ({}));
         const message = errorData.error?.message || `API error (${response.status}: ${response.statusText})`;
         lastError = new Error(message);
-        continue; // try next model
+        continue;
       }
 
       const data = await response.json();
@@ -207,7 +224,6 @@ Respond ONLY with the raw JSON. Do not wrap in markdown quotes if possible, or u
         throw new Error('Không nhận được nội dung từ Gemini API.');
       }
 
-      // Clean up json if wrapped in markdown
       let cleanedJson = rawText.trim();
       if (cleanedJson.startsWith('```json')) {
         cleanedJson = cleanedJson.replace(/^```json/, '').replace(/```$/, '').trim();
@@ -217,7 +233,6 @@ Respond ONLY with the raw JSON. Do not wrap in markdown quotes if possible, or u
 
       const parsed = JSON.parse(cleanedJson);
       
-      // Adapt into our standardized passage format
       return {
         id: `ai-${Date.now()}`,
         isAiGenerated: true,
